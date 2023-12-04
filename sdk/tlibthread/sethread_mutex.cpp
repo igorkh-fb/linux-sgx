@@ -93,12 +93,11 @@ int sgx_thread_mutex_lock(sgx_thread_mutex_t *mutex)
             return 0;
         }
 
-        if (mutex->m_owner == SGX_THREAD_T_NULL
-            && (QUEUE_FIRST(&mutex->m_queue) == self
-            || QUEUE_FIRST(&mutex->m_queue) == SGX_THREAD_T_NULL)) {
-
-            if (QUEUE_FIRST(&mutex->m_queue) == self)
-                QUEUE_REMOVE_HEAD(&mutex->m_queue);
+        /* Barge into the mutex as long as it has no current
+         * owner, even if queue is not empty
+         */
+        if (mutex->m_owner == SGX_THREAD_T_NULL) {
+            QUEUE_REMOVE(&mutex->m_queue, self);
 
             mutex->m_owner = self;
             mutex->m_refcount++;
@@ -110,7 +109,7 @@ int sgx_thread_mutex_lock(sgx_thread_mutex_t *mutex)
         QUEUE_FOREACH(waiter, &mutex->m_queue) {
             if (waiter == self) break;
         }
-        
+
         if (waiter == SGX_THREAD_T_NULL)
             QUEUE_INSERT_TAIL(&mutex->m_queue, self);
 
@@ -144,12 +143,8 @@ int sgx_thread_mutex_trylock(sgx_thread_mutex_t *mutex)
         return 0;
     }
 
-    if (mutex->m_owner == SGX_THREAD_T_NULL
-        && (QUEUE_FIRST(&mutex->m_queue) == self
-        || QUEUE_FIRST(&mutex->m_queue) == SGX_THREAD_T_NULL)) {
-
-        if (QUEUE_FIRST(&mutex->m_queue) == self)
-            QUEUE_REMOVE_HEAD(&mutex->m_queue);
+    if (mutex->m_owner == SGX_THREAD_T_NULL) {
+        QUEUE_REMOVE(&mutex->m_queue, self);
 
         mutex->m_owner = self;
         mutex->m_refcount++;
@@ -179,7 +174,7 @@ int sgx_thread_mutex_unlock_lazy(sgx_thread_mutex_t *mutex, sgx_thread_t *pwaite
         return EINVAL;
     }
 
-    /* if the mutux is not locked by anyone */
+    /* if the mutex is not locked by anyone */
     if(mutex->m_owner == SGX_THREAD_T_NULL) {
         SPIN_UNLOCK(&mutex->m_lock);
         return EPERM;
