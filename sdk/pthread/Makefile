@@ -49,7 +49,8 @@ OBJ := pthread.o \
        pthread_mutex.o \
        pthread_cond.o \
        pthread_tls.o \
-       pthread_rwlock.o
+       pthread_rwlock.o \
+       semaphore.o
 
 EDGER8R_DIR = $(LINUX_SDK_DIR)/edger8r/linux
 EDGER8R = $(EDGER8R_DIR)/_build/Edger8r.native

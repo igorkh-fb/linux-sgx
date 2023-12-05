@@ -105,6 +105,14 @@ typedef struct _sgx_thread_cond_attr_t
     unsigned char       m_dummy;  /* for C syntax check */
 } sgx_thread_condattr_t;
 
+/* Counting Semaphore */
+typedef struct _sgx_thread_semaphore_t
+{
+    uint32_t            m_value;
+    volatile uint32_t   m_lock;          /* use sgx_spinlock_t */
+    sgx_thread_queue_t  m_queue;
+} sgx_thread_semaphore_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -135,6 +143,14 @@ int SGXAPI sgx_thread_cond_destroy(sgx_thread_cond_t *cond);
 int SGXAPI sgx_thread_cond_wait(sgx_thread_cond_t *cond, sgx_thread_mutex_t *mutex);
 int SGXAPI sgx_thread_cond_signal(sgx_thread_cond_t *cond);
 int SGXAPI sgx_thread_cond_broadcast(sgx_thread_cond_t *cond);
+
+/* Counting Semaphore */
+int SGXAPI sgx_thread_semaphore_init(sgx_thread_semaphore_t *sem, uint32_t value);
+int SGXAPI sgx_thread_semaphore_destroy(sgx_thread_semaphore_t *sem);
+int SGXAPI sgx_thread_semaphore_wait(sgx_thread_semaphore_t *sem);
+int SGXAPI sgx_thread_semaphore_trywait(sgx_thread_semaphore_t *sem);
+int SGXAPI sgx_thread_semaphore_post(sgx_thread_semaphore_t *sem);
+int SGXAPI sgx_thread_semaphore_getvalue(sgx_thread_semaphore_t *sem, uint32_t *sval);
 
 sgx_thread_t SGXAPI sgx_thread_self(void);
 int sgx_thread_equal(sgx_thread_t a, sgx_thread_t b);
